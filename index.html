@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <base target="_top">
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stock Opname Sales App PWA</title>
   <link rel="manifest" href="manifest.json">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  
   <style>
     body { background-color: #f4f6f9; padding-top: 15px; font-size: 14px; }
     .card-info { background: #ffffff; border-left: 5px solid #212529; }
     .blok-header { background-color: #fff3cd; color: #856404; font-weight: bold; padding: 6px 10px; margin-top: 15px; border-radius: 4px; border-left: 4px solid #ffc107; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-    .table-input th { background-color: #f8f9fa; font-size: 11px; text-align: center; }
     .mobile-container { max-width: 550px; margin: 0 auto; }
     .accounting-text { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
     .login-screen { display: block; }
@@ -22,12 +20,16 @@
 
 <div class="container mobile-container text-dark">
   
+  <!-- SCREEN 1: PAGE LOGIN -->
   <div id="loginPage" class="card shadow login-screen my-5">
     <div class="card-header bg-dark text-white text-center py-3">
       <h5 class="mb-0 fw-bold">🔐 Sales Authentication</h5>
     </div>
     <div class="card-body p-4">
       <div id="alertLogin" class="alert alert-danger d-none small"></div>
+      
+      <!-- TOMBOL INSTALASI MANUAL PWA -->
+      <button id="btnInstallPWA" class="btn btn-warning w-100 fw-bold py-2 mb-3 d-none">📲 INSTAL APLIKASI DI HP</button>
       
       <div class="mb-3">
         <label class="form-label fw-bold">Pilih Wilayah / Cabang (Bisa Diketik)</label>
@@ -40,12 +42,11 @@
         <input type="text" id="loginKodeSales" class="form-control" placeholder="Contoh: A200-TSEP01" autocomplete="off">
       </div>
       
-      <button id="btnLogin" class="btn btn-dark w-100 fw-bold py-2" onclick="handleLogin()">
-        MASUK KE APLIKASI
-      </button>
+      <button id="btnLogin" class="btn btn-dark w-100 fw-bold py-2" onclick="handleLogin()">MASUK KE APLIKASI</button>
     </div>
   </div>
 
+  <!-- SCREEN 2: MAIN APP SCREEN -->
   <div id="appPage" class="card shadow-sm mb-4 app-screen">
     <div class="card-header bg-dark text-white text-center py-3 d-flex justify-content-between align-items-center">
       <span class="small fw-bold" id="displayUser">Sales: -</span>
@@ -66,11 +67,9 @@
           <div class="col-6">Rayon: <span id="infoRayon" class="fw-bold text-dark">-</span></div>
           <div class="col-6">Type Outlet: <span id="infoType" class="fw-bold text-dark">-</span></div>
           <div class="col-12">Segmentasi: <span id="infoSeg" class="fw-bold text-dark">-</span></div>
-          
           <div class="col-12 mt-1">Target / Bln: <span id="infoTarget" class="accounting-text text-dark float-end">-</span></div>
           <div class="col-12">Pencapaian: <span id="infoAch" class="accounting-text text-success float-end">-</span></div>
           <div class="col-12 border-bottom pb-1">Kekurangan Target: <span id="infoKurang" class="accounting-text text-danger float-end">-</span></div>
-          
           <div class="col-4 mt-2">Target PV: <span id="infoTargetPV" class="fw-bold text-dark">-</span></div>
           <div class="col-4 mt-2">Realisasi PV: <span id="infoRealPV" class="fw-bold text-success">-</span></div>
           <div class="col-4 mt-2">Kurang PV: <span id="infoKurangPV" class="fw-bold text-danger">-</span></div>
@@ -80,23 +79,18 @@
       <div id="produkSection" class="d-none">
         <div id="loadingProduk" class="text-center text-muted my-3 d-none">Mengambil data promo & produk...</div>
         <div id="blocksContainer"></div>
-
         <div class="form-check my-3">
           <input class="form-check-input" type="checkbox" id="checkValidasi" onchange="toggleSubmitBtn()">
-          <label class="form-check-label small fw-bold text-danger" for="checkValidasi">
-            Saya mengonfirmasi data stock di atas sudah benar.
-          </label>
+          <label class="form-check-label small fw-bold text-danger" for="checkValidasi">Saya mengonfirmasi data stock di atas sudah benar.</label>
         </div>
-
-        <button id="btnSubmit" class="btn btn-dark w-100 py-2 fw-bold" onclick="kirimData()" disabled>
-          🚀 SUBMIT DATA KE DATABASE
-        </button>
+        <button id="btnSubmit" class="btn btn-dark w-100 py-2 fw-bold" onclick="kirimData()" disabled>🚀 SUBMIT DATA KE DATABASE</button>
       </div>
 
     </div>
   </div>
 </div>
 
+<!-- POP-UP MODAL NOTIFIKASI -->
 <div class="modal fade" id="notifModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
@@ -104,51 +98,58 @@
         <div id="modalIconContainer" class="mb-3"></div>
         <h5 class="fw-bold mb-2" id="modalTitle">Status</h5>
         <p class="text-muted small mb-4" id="modalMessage">Pesan respons di sini...</p>
-        <button type="button" class="btn btn-dark w-100 fw-bold py-2" data-bs-dismiss="modal" style="border-radius: 8px;">
-          OKAY, MENGERTI
-        </button>
+        <button type="button" class="btn btn-dark w-100 fw-bold py-2" data-bs-dismiss="modal" style="border-radius: 8px;">OKAY, MENGERTI</button>
       </div>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-  // PENTING: Ganti URL ini dengan URL Web App (doGet/doPost) Google Apps Script Anda yang baru saja di-deploy
-  const API_URL = "https://script.google.com/macros/s/AKfycbw9N2d0DMgxo_hDs1KrXpQ0vTtYSmyQeXtf7OOZ4Jb5vhYmP8zi2lwVt_0q2odjOoERhw/exec";
+  // PENTING: GANTI DENGAN URL DEPLOYMENT WEB APP BARU ANDA
+  const API_URL = "https://script.google.com/macros/s/AKfycbzZjcgz-frD9FNbU0NsSn8YmaCS9Jsz4n_qGOAh5vwo4aHlMjYcp236bQhGkwYrUb-edw/exec";
 
   let sessionUser = { wilayah: "", kodeSales: "" };
   let masterTokoTerfilter = [];
   let selectedTokoObj = null;
+  let deferredPrompt;
 
   function formatRupiah(angka) {
     return "Rp " + angka.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
-  // REGISTER SERVICE WORKER (AKTIFKAN FITUR INSTALASI PWA HAPE)
+  // REGISTER SERVICE WORKER (PWA)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('PWA Service Worker terdaftar!', reg))
-        .catch(err => console.log('Service Worker gagal:', err));
+        .then(reg => console.log('PWA Service Worker Aktif!'))
+        .catch(err => console.log('Service Worker Gagal!', err));
     });
   }
 
-  // FETCH DATA WILAYAH DARI API GAS
-  // FETCH DATA WILAYAH DARI API GAS (VERSI PERBAIKAN CORS)
+  // INSTALASI PEMICU PWA
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('btnInstallPWA').classList.remove('d-none');
+  });
+
+  document.getElementById('btnInstallPWA').addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById('btnInstallPWA').classList.add('d-none');
+    }
+  });
+
+  // LOAD WILAYAH VIA POST BYPASS CORS
   window.addEventListener('load', function() {
-    fetch(`${API_URL}?action=getInitData`, {
-      method: 'GET',
-      mode: 'cors', // Pastikan mode CORS aktif
-      headers: {
-        'Content-Type': 'text/plain'
-      }
+    fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "getInitData" })
     })
-    .then(res => {
-      if (!res.ok) throw new Error('Network response was not ok');
-      return res.json();
-    })
+    .then(res => res.json())
     .then(res => {
       const dlWilayah = document.getElementById('wilayahDatalist');
       dlWilayah.innerHTML = '';
@@ -158,11 +159,7 @@
         dlWilayah.appendChild(opt);
       });
       document.getElementById('loginWilayah').placeholder = "Ketik nama wilayah/cabang...";
-    })
-    .catch(err => {
-      console.error("Detail Error:", err);
-      alert("Gagal mengambil data inisialisasi jaringan. Silakan segarkan halaman.");
-    });
+    }).catch(err => alert("Gagal memuat data inisialisasi jaringan. Sila refresh."));
   });
 
   function handleLogin() {
@@ -181,7 +178,6 @@
     btn.disabled = true;
     btn.innerText = "🔒 Memverifikasi Akses...";
 
-    // HIT POST API LOGIN
     fetch(API_URL, {
       method: "POST",
       body: JSON.stringify({ action: "prosesLogin", userWilayah: wil, userKodeSales: sales })
@@ -208,7 +204,7 @@
     }).catch(err => {
       btn.disabled = false;
       btn.innerText = "MASUK KE APLIKASI";
-      alertBox.innerText = "🚨 Error Jaringan: Gagal menghubungi server otentikasi.";
+      alertBox.innerText = "🚨 Gagal terhubung ke server verifikasi.";
       alertBox.classList.remove('d-none');
     });
   }
@@ -230,18 +226,15 @@
 
     const kodeToko = inputValue.split(" - ")[0];
     selectedTokoObj = masterTokoTerfilter.find(t => t.kodeToko === kodeToko);
-    
     if(!selectedTokoObj) return;
 
     document.getElementById('infoNamaToko').innerText = selectedTokoObj.namaToko;
     document.getElementById('infoRayon').innerText = selectedTokoObj.rayon;
     document.getElementById('infoType').innerText = selectedTokoObj.typeOutlet;
     document.getElementById('infoSeg').innerText = selectedTokoObj.segPolaris;
-    
     document.getElementById('infoTarget').innerText = formatRupiah(selectedTokoObj.target);
     document.getElementById('infoAch').innerText = formatRupiah(selectedTokoObj.pencapaian);
     document.getElementById('infoKurang').innerText = formatRupiah(selectedTokoObj.target - selectedTokoObj.pencapaian);
-    
     document.getElementById('infoTargetPV').innerText = selectedTokoObj.targetPV || 0;
     document.getElementById('infoRealPV').innerText = selectedTokoObj.realisasiPV || 0;
     document.getElementById('infoKurangPV').innerText = selectedTokoObj.kekuranganPV || 0;
@@ -253,8 +246,10 @@
     document.getElementById('checkValidasi').checked = false;
     document.getElementById('btnSubmit').disabled = true;
 
-    // FETCH GET PRODUCT LIST PROMO DENGAN KOLOM DETAIL PROMO BARU
-    fetch(`${API_URL}?action=getProductList&kodeToko=${kodeToko}&rayonToko=${selectedTokoObj.rayon}`)
+    fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "getProductList", kodeToko: kodeToko, rayonToko: selectedTokoObj.rayon })
+    })
     .then(res => res.json())
     .then(produkList => {
       document.getElementById('loadingProduk').classList.add('d-none');
@@ -269,22 +264,14 @@
         let blockHtml = `<div class="blok-header">${namaBlok}</div>
           <div class="table-responsive">
             <table class="table table-bordered table-sm align-middle mt-1">
-              <thead>
-                <tr>
-                  <th style="width: 45px;">Seg</th>
-                  <th>Nama Produk</th>
-                  <th>Promo Produk</th> <!-- HEAD KOLOM BARU -->
-                  <th style="width: 55px;">Last</th>
-                  <th style="width: 85px;">Current</th>
-                </tr>
-              </thead>
+              <thead><tr><th style="width: 45px;">Seg</th><th>Nama Produk</th><th>Promo Produk</th><th style="width: 55px;">Last</th><th style="width: 85px;">Current</th></tr></thead>
               <tbody>`;
               
         grouped[namaBlok].forEach(prod => {
           blockHtml += `<tr>
             <td class="text-center small text-muted font-monospace" style="font-size:11px;">${prod.segmentasi}</td>
             <td class="small fw-bold" style="font-size:12px;">${prod.nama}</td>
-            <td class="small text-danger" style="font-size:11px;">${prod.programPromo}</td> <!-- RENDER KOLOM PROMO BARU -->
+            <td class="small text-danger" style="font-size:11px;">${prod.programPromo}</td>
             <td class="text-center text-muted small">${prod.lastStock}</td>
             <td><input type="number" class="form-control form-control-sm text-center input-qty" data-nama="${prod.nama}" placeholder="0"></td>
           </tr>`;
@@ -323,7 +310,6 @@
     btnSubmit.disabled = true;
     btnSubmit.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ⏳ Menyimpan...`;
 
-    // HIT POST API SUBMIT DATA
     fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(res => {
@@ -349,7 +335,7 @@
       document.getElementById('produkSection').classList.add('d-none');
     }).catch(err => {
       btnSubmit.innerHTML = `🚀 SUBMIT DATA KE DATABASE`;
-      alert("⚠️ Gagal mengirim data. Periksa sinyal internet Anda.");
+      alert("⚠️ Gagal mengirim data. Periksa kembali jaringan internet.");
     });
   }
 
