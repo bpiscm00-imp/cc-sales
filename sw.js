@@ -27,7 +27,12 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.url.includes('http') && !event.request.url.includes('script.google.com')) {
+  // Cegah Service Worker mengintervensi atau menyentuh domain Google Apps Script
+  if (event.request.url.includes('script.google.com') || event.request.url.includes('script.googleusercontent.com')) {
+    return; // Biarkan browser memproses langsung ke internet tanpa masuk cache PWA
+  }
+
+  if (event.request.url.includes('http')) {
     event.respondWith(
       fetch(event.request).catch(() => {
         return caches.match(event.request);
