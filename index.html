@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>Stock Opname Sales App PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <style>
+    body { background-color: #f4f6f9; padding-top: 15px; font-size: 14px; }
+    .card-info { background: #ffffff; border-left: 5px solid #212529; }
+    .blok-header { background-color: #fff3cd; color: #856404; font-weight: bold; padding: 6px 10px; margin-top: 15px; border-radius: 4px; border-left: 4px solid #ffc107; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    .table-input th { background-color: #f8f9fa; font-size: 11px; text-align: center; }
+    .mobile-container { max-width: 550px; margin: 0 auto; }
+    .accounting-text { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+    .login-screen { display: block; }
+    .app-screen { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="container mobile-container text-dark">
+  
+  <div id="loginPage" class="card shadow login-screen my-5">
+    <div class="card-header bg-dark text-white text-center py-3">
+      <h5 class="mb-0 fw-bold">🔐 Sales Authentication</h5>
+    </div>
+    <div class="card-body p-4">
+      <div id="alertLogin" class="alert alert-danger d-none small"></div>
+      
+      <div class="mb-3">
+        <label class="form-label fw-bold">Pilih Wilayah / Cabang (Bisa Diketik)</label>
+        <input list="wilayahDatalist" id="loginWilayah" class="form-select" placeholder="Memuat daftar wilayah...">
+        <datalist id="wilayahDatalist"></datalist>
+      </div>
+      
+      <div class="mb-4">
+        <label class="form-label fw-bold">Kode Salesman</label>
+        <input type="text" id="loginKodeSales" class="form-control" placeholder="Contoh: A200-TSEP01" autocomplete="off">
+      </div>
+      
+      <button id="btnLogin" class="btn btn-dark w-100 fw-bold py-2" onclick="handleLogin()">
+        MASUK KE APLIKASI
+      </button>
+    </div>
+  </div>
+
+  <div id="appPage" class="card shadow-sm mb-4 app-screen">
+    <div class="card-header bg-dark text-white text-center py-3 d-flex justify-content-between align-items-center">
+      <span class="small fw-bold" id="displayUser">Sales: -</span>
+      <h6 class="mb-0">📦 Stock Opname</h6>
+      <button class="btn btn-sm btn-outline-light py-0 px-2 small" onclick="handleLogout()">Logout</button>
+    </div>
+    <div class="card-body">
+      
+      <div class="mb-3">
+        <label class="form-label fw-bold mb-1">Pilih Toko Tercover Anda</label>
+        <input list="tokoDatalist" id="tokoInput" class="form-select form-select-sm" placeholder="Ketik kode atau nama toko..." onchange="onTokoChange()">
+        <datalist id="tokoDatalist"></datalist>
+      </div>
+      
+      <div id="detailTokoCard" class="card card-info p-3 mb-3 d-none">
+        <h6 class="fw-bold mb-2 text-dark" id="infoNamaToko">NAMA TOKO</h6>
+        <div class="row g-2 text-muted small">
+          <div class="col-6">Rayon: <span id="infoRayon" class="fw-bold text-dark">-</span></div>
+          <div class="col-6">Type Outlet: <span id="infoType" class="fw-bold text-dark">-</span></div>
+          <div class="col-12">Segmentasi: <span id="infoSeg" class="fw-bold text-dark">-</span></div>
+          
+          <div class="col-12 mt-1">Target / Bln: <span id="infoTarget" class="accounting-text text-dark float-end">-</span></div>
+          <div class="col-12">Pencapaian: <span id="infoAch" class="accounting-text text-success float-end">-</span></div>
+          <div class="col-12 border-bottom pb-1">Kekurangan Target: <span id="infoKurang" class="accounting-text text-danger float-end">-</span></div>
+          
+          <div class="col-4 mt-2">Target PV: <span id="infoTargetPV" class="fw-bold text-dark">-</span></div>
+          <div class="col-4 mt-2">Realisasi PV: <span id="infoRealPV" class="fw-bold text-success">-</span></div>
+          <div class="col-4 mt-2">Kurang PV: <span id="infoKurangPV" class="fw-bold text-danger">-</span></div>
+        </div>
+      </div>
+
+      <div id="produkSection" class="d-none">
+        <div id="loadingProduk" class="text-center text-muted my-3 d-none">Mengambil data promo & produk...</div>
+        <div id="blocksContainer"></div>
+
+        <div class="form-check my-3">
+          <input class="form-check-input" type="checkbox" id="checkValidasi" onchange="toggleSubmitBtn()">
+          <label class="form-check-label small fw-bold text-danger" for="checkValidasi">
+            Saya mengonfirmasi data stock di atas sudah benar.
+          </label>
+        </div>
+
+        <button id="btnSubmit" class="btn btn-dark w-100 py-2 fw-bold" onclick="kirimData()" disabled>
+          🚀 SUBMIT DATA KE DATABASE
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="notifModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+      <div class="modal-body text-center p-4">
+        <div id="modalIconContainer" class="mb-3"></div>
+        <h5 class="fw-bold mb-2" id="modalTitle">Status</h5>
+        <p class="text-muted small mb-4" id="modalMessage">Pesan respons di sini...</p>
+        <button type="button" class="btn btn-dark w-100 fw-bold py-2" data-bs-dismiss="modal" style="border-radius: 8px;">
+          OKAY, MENGERTI
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // PENTING: Ganti URL ini dengan URL Web App (doGet/doPost) Google Apps Script Anda yang baru saja di-deploy
+  const API_URL = "https://script.google.com/macros/s/AKfycbw9N2d0DMgxo_hDs1KrXpQ0vTtYSmyQeXtf7OOZ4Jb5vhYmP8zi2lwVt_0q2odjOoERhw/exec";
+
+  let sessionUser = { wilayah: "", kodeSales: "" };
+  let masterTokoTerfilter = [];
+  let selectedTokoObj = null;
+
+  function formatRupiah(angka) {
+    return "Rp " + angka.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  // REGISTER SERVICE WORKER (AKTIFKAN FITUR INSTALASI PWA HAPE)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('PWA Service Worker terdaftar!', reg))
+        .catch(err => console.log('Service Worker gagal:', err));
+    });
+  }
+
+  // FETCH DATA WILAYAH DARI API GAS
+  window.addEventListener('load', function() {
+    fetch(`${API_URL}?action=getInitData`)
+      .then(res => res.json())
+      .then(res => {
+        const dlWilayah = document.getElementById('wilayahDatalist');
+        dlWilayah.innerHTML = '';
+        res.wilayahList.forEach(wil => {
+          let opt = document.createElement('option');
+          opt.value = wil;
+          dlWilayah.appendChild(opt);
+        });
+        document.getElementById('loginWilayah').placeholder = "Ketik nama wilayah/cabang...";
+      }).catch(err => alert("Gagal mengambil data inisialisasi jaringan."));
+  });
+
+  function handleLogin() {
+    const wil = document.getElementById('loginWilayah').value.trim();
+    const sales = document.getElementById('loginKodeSales').value.trim();
+    const alertBox = document.getElementById('alertLogin');
+    const btn = document.getElementById('btnLogin');
+    
+    if (!wil || !sales) {
+      alertBox.innerText = "⚠️ Harap isi Wilayah dan Kode Salesman dengan lengkap!";
+      alertBox.classList.remove('d-none');
+      return;
+    }
+    
+    alertBox.classList.add('d-none');
+    btn.disabled = true;
+    btn.innerText = "🔒 Memverifikasi Akses...";
+
+    // HIT POST API LOGIN
+    fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "prosesLogin", userWilayah: wil, userKodeSales: sales })
+    })
+    .then(res => res.json())
+    .then(res => {
+      btn.disabled = false;
+      btn.innerText = "MASUK KE APLIKASI";
+      
+      if (res.success) {
+        sessionUser.wilayah = wil;
+        sessionUser.kodeSales = sales;
+        masterTokoTerfilter = res.tokoList;
+        
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('appPage').style.display = 'block';
+        document.getElementById('displayUser').innerText = `Sales: ${sales} (${wil})`;
+        
+        buildTokoDatalist();
+      } else {
+        alertBox.innerText = res.message;
+        alertBox.classList.remove('d-none');
+      }
+    }).catch(err => {
+      btn.disabled = false;
+      btn.innerText = "MASUK KE APLIKASI";
+      alertBox.innerText = "🚨 Error Jaringan: Gagal menghubungi server otentikasi.";
+      alertBox.classList.remove('d-none');
+    });
+  }
+
+  function buildTokoDatalist() {
+    const dl = document.getElementById('tokoDatalist');
+    dl.innerHTML = "";
+    document.getElementById('tokoInput').value = "";
+    masterTokoTerfilter.forEach(t => {
+      let opt = document.createElement('option');
+      opt.value = `${t.kodeToko} - ${t.namaToko}`;
+      dl.appendChild(opt);
+    });
+  }
+
+  function onTokoChange() {
+    const inputValue = document.getElementById('tokoInput').value;
+    if(!inputValue) return;
+
+    const kodeToko = inputValue.split(" - ")[0];
+    selectedTokoObj = masterTokoTerfilter.find(t => t.kodeToko === kodeToko);
+    
+    if(!selectedTokoObj) return;
+
+    document.getElementById('infoNamaToko').innerText = selectedTokoObj.namaToko;
+    document.getElementById('infoRayon').innerText = selectedTokoObj.rayon;
+    document.getElementById('infoType').innerText = selectedTokoObj.typeOutlet;
+    document.getElementById('infoSeg').innerText = selectedTokoObj.segPolaris;
+    
+    document.getElementById('infoTarget').innerText = formatRupiah(selectedTokoObj.target);
+    document.getElementById('infoAch').innerText = formatRupiah(selectedTokoObj.pencapaian);
+    document.getElementById('infoKurang').innerText = formatRupiah(selectedTokoObj.target - selectedTokoObj.pencapaian);
+    
+    document.getElementById('infoTargetPV').innerText = selectedTokoObj.targetPV || 0;
+    document.getElementById('infoRealPV').innerText = selectedTokoObj.realisasiPV || 0;
+    document.getElementById('infoKurangPV').innerText = selectedTokoObj.kekuranganPV || 0;
+    
+    document.getElementById('detailTokoCard').classList.remove('d-none');
+    document.getElementById('produkSection').classList.remove('d-none');
+    document.getElementById('loadingProduk').classList.remove('d-none');
+    document.getElementById('blocksContainer').innerHTML = '';
+    document.getElementById('checkValidasi').checked = false;
+    document.getElementById('btnSubmit').disabled = true;
+
+    // FETCH GET PRODUCT LIST PROMO DENGAN KOLOM DETAIL PROMO BARU
+    fetch(`${API_URL}?action=getProductList&kodeToko=${kodeToko}&rayonToko=${selectedTokoObj.rayon}`)
+    .then(res => res.json())
+    .then(produkList => {
+      document.getElementById('loadingProduk').classList.add('d-none');
+      let grouped = {};
+      produkList.forEach(prod => {
+        if(!grouped[prod.tipeBlok]) grouped[prod.tipeBlok] = [];
+        grouped[prod.tipeBlok].push(prod);
+      });
+
+      const container = document.getElementById('blocksContainer');
+      for (let namaBlok in grouped) {
+        let blockHtml = `<div class="blok-header">${namaBlok}</div>
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle mt-1">
+              <thead>
+                <tr>
+                  <th style="width: 45px;">Seg</th>
+                  <th>Nama Produk</th>
+                  <th>Promo Produk</th> <!-- HEAD KOLOM BARU -->
+                  <th style="width: 55px;">Last</th>
+                  <th style="width: 85px;">Current</th>
+                </tr>
+              </thead>
+              <tbody>`;
+              
+        grouped[namaBlok].forEach(prod => {
+          blockHtml += `<tr>
+            <td class="text-center small text-muted font-monospace" style="font-size:11px;">${prod.segmentasi}</td>
+            <td class="small fw-bold" style="font-size:12px;">${prod.nama}</td>
+            <td class="small text-danger" style="font-size:11px;">${prod.programPromo}</td> <!-- RENDER KOLOM PROMO BARU -->
+            <td class="text-center text-muted small">${prod.lastStock}</td>
+            <td><input type="number" class="form-control form-control-sm text-center input-qty" data-nama="${prod.nama}" placeholder="0"></td>
+          </tr>`;
+        });
+        blockHtml += `</tbody></table></div>`;
+        container.insertAdjacentHTML('beforeend', blockHtml);
+      }
+    });
+  }
+
+  function toggleSubmitBtn() {
+    document.getElementById('btnSubmit').disabled = !document.getElementById('checkValidasi').checked;
+  }
+
+  function kirimData() {
+    const inputs = document.querySelectorAll('.input-qty');
+    let itemsToSubmit = [];
+    inputs.forEach(input => {
+      itemsToSubmit.push({ namaProduk: input.getAttribute('data-nama'), currentStock: input.value });
+    });
+
+    const payload = {
+      action: "submitData",
+      data: {
+        kodeSalesman: sessionUser.kodeSales,
+        rayon: selectedTokoObj.rayon,
+        kodeToko: selectedTokoObj.kodeToko,
+        namaToko: selectedTokoObj.namaToko,
+        typeOutlet: selectedTokoObj.typeOutlet,
+        segPolaris: selectedTokoObj.segPolaris,
+        items: itemsToSubmit
+      }
+    };
+
+    const btnSubmit = document.getElementById('btnSubmit');
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ⏳ Menyimpan...`;
+
+    // HIT POST API SUBMIT DATA
+    fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
+    .then(res => res.json())
+    .then(res => {
+      btnSubmit.innerHTML = `🚀 SUBMIT DATA KE DATABASE`;
+      const modalIconContainer = document.getElementById('modalIconContainer');
+      const modalTitle = document.getElementById('modalTitle');
+      
+      if (res.message.includes("direvisi")) {
+        modalIconContainer.innerHTML = `<div class="mx-auto d-flex align-items-center justify-content-center bg-warning text-white rounded-circle" style="width: 60px; height: 60px;"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg></div>`;
+        modalTitle.innerText = "Data Stok Direvisi!";
+        modalTitle.className = "fw-bold mb-2 text-warning";
+      } else {
+        modalIconContainer.innerHTML = `<div class="mx-auto d-flex align-items-center justify-content-center bg-success text-white rounded-circle" style="width: 60px; height: 60px;"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg></div>`;
+        modalTitle.innerText = "Berhasil Disimpan!";
+        modalTitle.className = "fw-bold mb-2 text-success";
+      }
+      
+      document.getElementById('modalMessage').innerText = res.message;
+      new bootstrap.Modal(document.getElementById('notifModal')).show();
+      
+      document.getElementById('tokoInput').value = "";
+      document.getElementById('detailTokoCard').classList.add('d-none');
+      document.getElementById('produkSection').classList.add('d-none');
+    }).catch(err => {
+      btnSubmit.innerHTML = `🚀 SUBMIT DATA KE DATABASE`;
+      alert("⚠️ Gagal mengirim data. Periksa sinyal internet Anda.");
+    });
+  }
+
+  function handleLogout() {
+    sessionUser = { wilayah: "", kodeSales: "" };
+    masterTokoTerfilter = [];
+    selectedTokoObj = null;
+    document.getElementById('loginKodeSales').value = "";
+    document.getElementById('loginWilayah').value = "";
+    document.getElementById('tokoInput').value = "";
+    document.getElementById('blocksContainer').innerHTML = "";
+    document.getElementById('detailTokoCard').classList.add('d-none');
+    document.getElementById('produkSection').classList.add('d-none');
+    document.getElementById('tokoDatalist').innerHTML = "";
+    document.getElementById('appPage').style.display = 'none';
+    document.getElementById('loginPage').style.display = 'block';
+  }
+</script>
+</body>
+</html>
