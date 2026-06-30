@@ -136,19 +136,33 @@
   }
 
   // FETCH DATA WILAYAH DARI API GAS
+  // FETCH DATA WILAYAH DARI API GAS (VERSI PERBAIKAN CORS)
   window.addEventListener('load', function() {
-    fetch(`${API_URL}?action=getInitData`)
-      .then(res => res.json())
-      .then(res => {
-        const dlWilayah = document.getElementById('wilayahDatalist');
-        dlWilayah.innerHTML = '';
-        res.wilayahList.forEach(wil => {
-          let opt = document.createElement('option');
-          opt.value = wil;
-          dlWilayah.appendChild(opt);
-        });
-        document.getElementById('loginWilayah').placeholder = "Ketik nama wilayah/cabang...";
-      }).catch(err => alert("Gagal mengambil data inisialisasi jaringan."));
+    fetch(`${API_URL}?action=getInitData`, {
+      method: 'GET',
+      mode: 'cors', // Pastikan mode CORS aktif
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    })
+    .then(res => {
+      const dlWilayah = document.getElementById('wilayahDatalist');
+      dlWilayah.innerHTML = '';
+      res.wilayahList.forEach(wil => {
+        let opt = document.createElement('option');
+        opt.value = wil;
+        dlWilayah.appendChild(opt);
+      });
+      document.getElementById('loginWilayah').placeholder = "Ketik nama wilayah/cabang...";
+    })
+    .catch(err => {
+      console.error("Detail Error:", err);
+      alert("Gagal mengambil data inisialisasi jaringan. Silakan segarkan halaman.");
+    });
   });
 
   function handleLogin() {
