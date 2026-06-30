@@ -128,10 +128,30 @@
   }
 
   // INSTALASI PEMICU PWA
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById('btnInstallPWA').classList.remove('d-none');
+ // LAKUKAN SINKRONISASI DI BAGIAN INI: UBAH GET MENJADI POST MURNI
+  window.addEventListener('load', function() {
+    fetch(API_URL, {
+      method: "POST", // WAJIB POST
+      body: JSON.stringify({ action: "getInitData" }),
+      headers: {
+        "Content-Type": "text/plain" // Menghindari preflight CORS error di browser
+      }
+    })
+    .then(res => res.json())
+    .then(res => {
+      const dlWilayah = document.getElementById('wilayahDatalist');
+      dlWilayah.innerHTML = '';
+      res.wilayahList.forEach(wil => {
+        let opt = document.createElement('option');
+        opt.value = wil;
+        dlWilayah.appendChild(opt);
+      });
+      document.getElementById('loginWilayah').placeholder = "Ketik nama wilayah/cabang...";
+    })
+    .catch(err => {
+      console.error("Detail log eror:", err);
+      alert("Gagal memuat data inisialisasi jaringan. Pastikan Apps Script sudah dideploy dengan hak akses 'Anyone'.");
+    });
   });
 
   document.getElementById('btnInstallPWA').addEventListener('click', async () => {
