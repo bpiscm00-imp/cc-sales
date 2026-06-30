@@ -14,7 +14,6 @@
     .accounting-text { font-family: 'Courier New', Courier, monospace; font-weight: bold; }
     .login-screen { display: block; }
     .app-screen { display: none; }
-    /* Style kustom untuk border left Reminder PV */
     .reminder-pv-banner { border-left: 5px solid #fd7e14 !important; background-color: #fff3cd !important; color: #856404 !important; border-color: #ffc107 !important; }
   </style>
 </head>
@@ -79,7 +78,7 @@
         </div>
       </div>
 
-      <!-- NEW SECTION: REMINDER TARGET PV DINAMIS -->
+      <!-- SECTION: REMINDER TARGET PV DINAMIS -->
       <div id="reminderPVSection" class="alert reminder-pv-banner shadow-sm mb-3 py-2 px-3 d-none">
         <div class="d-flex align-items-center">
           <div class="me-2">
@@ -124,8 +123,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // PENTING: GANTI DENGAN URL DEPLOYMENT WEB APP BARU ANDA
-  const API_URL = "https://script.google.com/macros/s/AKfycbw9N2d0DMgxo_hDs1KrXpQ0vTtYSmyQeXtf7OOZ4Jb5vhYmP8zi2lwVt_0q2odjOoERhw/exec";
+  // PENTING: URL WEB APP GOOGLE APPS SCRIPT ANDA
+  const API_URL = "https://script.google.com/macros/s/AKfycbzZjcgz-frD9FNbU0NsSn8YmaCS9Jsz4n_qGOAh5vwo4aHlMjYcp236bQhGkwYrUb-edw/exec";
 
   let sessionUser = { wilayah: "", kodeSales: "" };
   let masterTokoTerfilter = [];
@@ -248,7 +247,7 @@
     selectedTokoObj = masterTokoTerfilter.find(t => t.kodeToko === kodeToko);
     if(!selectedTokoObj) return;
 
-    // 1. Render Informasi Umum Toko
+    // Render Informasi Umum Toko
     document.getElementById('infoNamaToko').innerText = selectedTokoObj.namaToko;
     document.getElementById('infoRayon').innerText = selectedTokoObj.rayon;
     document.getElementById('infoType').innerText = selectedTokoObj.typeOutlet;
@@ -259,14 +258,14 @@
     document.getElementById('infoTargetPV').innerText = selectedTokoObj.targetPV || 0;
     document.getElementById('infoRealPV').innerText = selectedTokoObj.realisasiPV || 0;
     
-    // 2. Ambil Nilai Kekurangan PV[cite: 2]
+    // Ambil Nilai Kekurangan PV[cite: 2]
     const kurangPV = Number(selectedTokoObj.kekuranganPV) || 0;
     document.getElementById('infoKurangPV').innerText = kurangPV;
     
-    // 3. Deklarasikan reminderBox SEKALI SAJA di Sini[cite: 2]
+    // Ambil Element Banner Reminder
     const reminderBox = document.getElementById('reminderPVSection');
     
-    // 4. Logika Validasi Muncul/Sembunyikan Banner (Mengakomodasi Angka Negatif)[cite: 2]
+    // Logika Validasi Banner: Jika nilai kurang dari 0 (negatif seperti -4)[cite: 2]
     if (kurangPV < 0) {
       document.getElementById('reminderQtyPV').innerText = Math.abs(kurangPV);
       reminderBox.classList.remove('d-none');
@@ -274,7 +273,6 @@
       reminderBox.classList.add('d-none');
     }
     
-    // 5. Reset State Form Sebelum Memuat Data Baru
     document.getElementById('detailTokoCard').classList.remove('d-none');
     document.getElementById('produkSection').classList.remove('d-none');
     document.getElementById('loadingProduk').classList.remove('d-none');
@@ -282,7 +280,6 @@
     document.getElementById('checkValidasi').checked = false;
     document.getElementById('btnSubmit').disabled = true;
 
-    // 6. Fetch Daftar Produk Menggunakan Metode POST Lintas Domain[cite: 2]
     fetch(API_URL, {
       method: "POST",
       body: JSON.stringify({ action: "getProductList", kodeToko: kodeToko, rayonToko: selectedTokoObj.rayon }),
@@ -374,7 +371,7 @@
       
       document.getElementById('tokoInput').value = "";
       document.getElementById('detailTokoCard').classList.add('d-none');
-      document.getElementById('reminderPVSection').classList.add('d-none'); // Sembunyikan banner saat sukses submit
+      document.getElementById('reminderPVSection').classList.add('d-none');
       document.getElementById('produkSection').classList.add('d-none');
     }).catch(err => {
       btnSubmit.innerHTML = `🚀 SUBMIT DATA KE DATABASE`;
@@ -383,7 +380,7 @@
   }
 
   function handleLogout() {
-    sessionUser = { wilayah: "", kodeSales = "" };
+    sessionUser = { wilayah: "", kodeSales: "" };
     masterTokoTerfilter = [];
     selectedTokoObj = null;
     document.getElementById('loginKodeSales').value = "";
@@ -391,7 +388,7 @@
     document.getElementById('tokoInput').value = "";
     document.getElementById('blocksContainer').innerHTML = "";
     document.getElementById('detailTokoCard').classList.add('d-none');
-    document.getElementById('reminderPVSection').classList.add('d-none'); // Reset pembersihan banner
+    document.getElementById('reminderPVSection').classList.add('d-none');
     document.getElementById('produkSection').classList.add('d-none');
     document.getElementById('tokoDatalist').innerHTML = "";
     document.getElementById('appPage').style.display = 'none';
