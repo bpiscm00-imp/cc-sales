@@ -192,10 +192,15 @@
     btn.disabled = true;
     btn.innerText = "🔒 Memverifikasi Akses...";
 
+    // Menggunakan URLSearchParams agar data diparse dengan sempurna oleh Google Apps Script
+    const formData = new URLSearchParams();
+    formData.append("action", "prosesLogin");
+    formData.append("userWilayah", wil);
+    formData.append("userKodeSales", sales);
+
     fetch(API_URL, {
       method: "POST",
-      body: JSON.stringify({ action: "prosesLogin", userWilayah: wil, userKodeSales: sales }),
-      headers: { "Content-Type": "text/plain" }
+      body: formData
     })
     .then(res => res.json())
     .then(res => {
@@ -213,14 +218,14 @@
         
         buildTokoDatalist();
       } else {
-        // Tambahkan fallback jika res.message bernilai undefined
-        alertBox.innerText = res.message || "❌ Terjadi kesalahan pada verifikasi server.";
+        alertBox.innerText = res.message || "❌ Gagal memverifikasi login.";
         alertBox.classList.remove('d-none');
       }
-    }).catch(err => {
+    })
+    .catch(err => {
       btn.disabled = false;
       btn.innerText = "MASUK KE APLIKASI";
-      alertBox.innerText = "🚨 Gagal terhubung ke server verifikasi.";
+      alertBox.innerText = "🚨 Gagal terhubung ke server verifikasi: " + err.message;
       alertBox.classList.remove('d-none');
     });
   }
