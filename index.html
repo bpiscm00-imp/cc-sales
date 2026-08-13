@@ -152,10 +152,11 @@
           selectWilayah.appendChild(opt);
         });
       } else {
-        selectWilayah.innerHTML = '<option value="">-- Tidak Ada Data Wilayah --</option>';
+        const errorMsg = res.errorDetails ? res.errorDetails : "Data kosong di sheet";
+        selectWilayah.innerHTML = `<option value="">-- Gagal: ${errorMsg} --</option>`;
       }
     }).catch(err => {
-      alert("Gagal memuat data jaringan. Sila muat ulang halaman.");
+      alert("Gagal memuat data jaringan: " + err.message);
     });
   });
 
