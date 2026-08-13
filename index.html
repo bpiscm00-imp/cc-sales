@@ -213,7 +213,8 @@
         
         buildTokoDatalist();
       } else {
-        alertBox.innerText = res.message;
+        // Tambahkan fallback jika res.message bernilai undefined
+        alertBox.innerText = res.message || "❌ Terjadi kesalahan pada verifikasi server.";
         alertBox.classList.remove('d-none');
       }
     }).catch(err => {
