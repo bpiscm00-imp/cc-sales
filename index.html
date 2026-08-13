@@ -123,7 +123,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbwAi0mMjz6L9-b1jwfUAuu4pMAm9r3HsW0RM-h600VD-FEhlxcpVfUPVDnjTN6zG6-YTA/exec";
+  // PENTING: URL WEB APP GOOGLE APPS SCRIPT ANDA
+  const API_URL = "https://script.google.com/macros/s/AKfycbzZjcgz-frD9FNbU0NsSn8YmaCS9Jsz4n_qGOAh5vwo4aHlMjYcp236bQhGkwYrUb-edw/exec";
 
   let sessionUser = { wilayah: "", kodeSales: "" };
   let masterTokoTerfilter = [];
@@ -134,6 +135,7 @@
     return "Rp " + angka.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
+  // REGISTER SERVICE WORKER (PWA)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
@@ -142,6 +144,7 @@
     });
   }
 
+  // INSTALASI PEMICU PWA
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
@@ -157,31 +160,26 @@
     }
   });
 
-  // 1. INIT DATA WILAYAH (Menggunakan URLSearchParams)
+  // LOAD WILAYAH VIA POST BYPASS CORS
   window.addEventListener('load', function() {
-    const formData = new URLSearchParams();
-    formData.append("action", "getInitData");
-
     fetch(API_URL, {
       method: "POST",
-      body: formData
+      body: JSON.stringify({ action: "getInitData" }),
+      headers: { "Content-Type": "text/plain" }
     })
     .then(res => res.json())
     .then(res => {
       const dlWilayah = document.getElementById('wilayahDatalist');
       dlWilayah.innerHTML = '';
-      if (res.wilayahList && res.wilayahList.length > 0) {
-        res.wilayahList.forEach(wil => {
-          let opt = document.createElement('option');
-          opt.value = wil;
-          dlWilayah.appendChild(opt);
-        });
-      }
+      res.wilayahList.forEach(wil => {
+        let opt = document.createElement('option');
+        opt.value = wil;
+        dlWilayah.appendChild(opt);
+      });
       document.getElementById('loginWilayah').placeholder = "Ketik nama wilayah/cabang...";
-    }).catch(err => alert("Gagal memuat data inisialisasi jaringan: " + err.message));
+    }).catch(err => alert("Gagal memuat data inisialisasi jaringan. Sila refresh."));
   });
 
-  // 2. HANDLE LOGIN (Menggunakan URLSearchParams)
   function handleLogin() {
     const wil = document.getElementById('loginWilayah').value.trim();
     const sales = document.getElementById('loginKodeSales').value.trim();
@@ -198,14 +196,10 @@
     btn.disabled = true;
     btn.innerText = "🔒 Memverifikasi Akses...";
 
-    const formData = new URLSearchParams();
-    formData.append("action", "prosesLogin");
-    formData.append("userWilayah", wil);
-    formData.append("userKodeSales", sales);
-
     fetch(API_URL, {
       method: "POST",
-      body: formData
+      body: JSON.stringify({ action: "prosesLogin", userWilayah: wil, userKodeSales: sales }),
+      headers: { "Content-Type": "text/plain" }
     })
     .then(res => res.json())
     .then(res => {
@@ -223,7 +217,7 @@
         
         buildTokoDatalist();
       } else {
-        alertBox.innerText = res.message || "❌ Gagal memverifikasi login.";
+        alertBox.innerText = res.message;
         alertBox.classList.remove('d-none');
       }
     }).catch(err => {
@@ -245,7 +239,6 @@
     });
   }
 
-  // 3. LOAD PRODUK TOKO (Menggunakan URLSearchParams)
   function onTokoChange() {
     const inputValue = document.getElementById('tokoInput').value;
     if(!inputValue) return;
@@ -254,6 +247,7 @@
     selectedTokoObj = masterTokoTerfilter.find(t => t.kodeToko === kodeToko);
     if(!selectedTokoObj) return;
 
+    // Render Informasi Umum Toko
     document.getElementById('infoNamaToko').innerText = selectedTokoObj.namaToko;
     document.getElementById('infoRayon').innerText = selectedTokoObj.rayon;
     document.getElementById('infoType').innerText = selectedTokoObj.typeOutlet;
@@ -264,11 +258,14 @@
     document.getElementById('infoTargetPV').innerText = selectedTokoObj.targetPV || 0;
     document.getElementById('infoRealPV').innerText = selectedTokoObj.realisasiPV || 0;
     
+    // Ambil Nilai Kekurangan PV[cite: 2]
     const kurangPV = Number(selectedTokoObj.kekuranganPV) || 0;
     document.getElementById('infoKurangPV').innerText = kurangPV;
     
+    // Ambil Element Banner Reminder
     const reminderBox = document.getElementById('reminderPVSection');
     
+    // Logika Validasi Banner: Jika nilai kurang dari 0 (negatif seperti -4)[cite: 2]
     if (kurangPV < 0) {
       document.getElementById('reminderQtyPV').innerText = Math.abs(kurangPV);
       reminderBox.classList.remove('d-none');
@@ -283,14 +280,10 @@
     document.getElementById('checkValidasi').checked = false;
     document.getElementById('btnSubmit').disabled = true;
 
-    const formData = new URLSearchParams();
-    formData.append("action", "getProductList");
-    formData.append("kodeToko", kodeToko);
-    formData.append("rayonToko", selectedTokoObj.rayon);
-
     fetch(API_URL, {
       method: "POST",
-      body: formData
+      body: JSON.stringify({ action: "getProductList", kodeToko: kodeToko, rayonToko: selectedTokoObj.rayon }),
+      headers: { "Content-Type": "text/plain" }
     })
     .then(res => res.json())
     .then(produkList => {
@@ -306,16 +299,7 @@
         let blockHtml = `<div class="blok-header">${namaBlok}</div>
           <div class="table-responsive">
             <table class="table table-bordered table-sm align-middle mt-1">
-              <thead>
-                <tr>
-                  <th style="width: 45px;">Seg</th>
-                  <th>Nama Produk</th>
-                  <th>Promo Produk</th>
-                  <th style="width: 70px;">Min Drop Size</th>
-                  <th style="width: 55px;">Last</th>
-                  <th style="width: 85px;">Current</th>
-                </tr>
-              </thead>
+              <thead><tr><th style="width: 45px;">Seg</th><th>Nama Produk</th><th>Promo Produk</th><th style="width: 55px;">Last</th><th style="width: 85px;">Current</th></tr></thead>
               <tbody>`;
               
         grouped[namaBlok].forEach(prod => {
@@ -323,7 +307,6 @@
             <td class="text-center small text-muted font-monospace" style="font-size:11px;">${prod.segmentasi}</td>
             <td class="small fw-bold" style="font-size:12px;">${prod.nama}</td>
             <td class="small text-danger" style="font-size:11px;">${prod.programPromo}</td>
-            <td class="text-center text-muted small">${prod.minDropSize !== undefined ? prod.minDropSize : 0}</td>
             <td class="text-center text-muted small">${prod.lastStock}</td>
             <td><input type="number" class="form-control form-control-sm text-center input-qty" data-nama="${prod.nama}" placeholder="0"></td>
           </tr>`;
@@ -338,7 +321,6 @@
     document.getElementById('btnSubmit').disabled = !document.getElementById('checkValidasi').checked;
   }
 
-  // 4. SUBMIT DATA (Menggunakan URLSearchParams)
   function kirimData() {
     const inputs = document.querySelectorAll('.input-qty');
     let itemsToSubmit = [];
@@ -346,19 +328,18 @@
       itemsToSubmit.push({ namaProduk: input.getAttribute('data-nama'), currentStock: input.value });
     });
 
-    const payloadData = {
-      kodeSalesman: sessionUser.kodeSales,
-      rayon: selectedTokoObj.rayon,
-      kodeToko: selectedTokoObj.kodeToko,
-      namaToko: selectedTokoObj.namaToko,
-      typeOutlet: selectedTokoObj.typeOutlet,
-      segPolaris: selectedTokoObj.segPolaris,
-      items: itemsToSubmit
+    const payload = {
+      action: "submitData",
+      data: {
+        kodeSalesman: sessionUser.kodeSales,
+        rayon: selectedTokoObj.rayon,
+        kodeToko: selectedTokoObj.kodeToko,
+        namaToko: selectedTokoObj.namaToko,
+        typeOutlet: selectedTokoObj.typeOutlet,
+        segPolaris: selectedTokoObj.segPolaris,
+        items: itemsToSubmit
+      }
     };
-
-    const formData = new URLSearchParams();
-    formData.append("action", "submitData");
-    formData.append("data", JSON.stringify(payloadData));
 
     const btnSubmit = document.getElementById('btnSubmit');
     btnSubmit.disabled = true;
@@ -366,7 +347,8 @@
 
     fetch(API_URL, { 
       method: "POST", 
-      body: formData
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "text/plain" }
     })
     .then(res => res.json())
     .then(res => {
@@ -374,7 +356,7 @@
       const modalIconContainer = document.getElementById('modalIconContainer');
       const modalTitle = document.getElementById('modalTitle');
       
-      if (res.message && res.message.includes("direvisi")) {
+      if (res.message.includes("direvisi")) {
         modalIconContainer.innerHTML = `<div class="mx-auto d-flex align-items-center justify-content-center bg-warning text-white rounded-circle" style="width: 60px; height: 60px;"><svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg></div>`;
         modalTitle.innerText = "Data Stok Direvisi!";
         modalTitle.className = "fw-bold mb-2 text-warning";
@@ -393,7 +375,7 @@
       document.getElementById('produkSection').classList.add('d-none');
     }).catch(err => {
       btnSubmit.innerHTML = `🚀 SUBMIT DATA KE DATABASE`;
-      alert("⚠️ Gagal mengirim data: " + err.message);
+      alert("⚠️ Gagal mengirim data. Periksa kembali jaringan internet.");
     });
   }
 
